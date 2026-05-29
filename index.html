@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RV Inspector Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--orange:#BA7517;--orange-dark:#854F0B;--orange-light:#FAEEDA;--green:#27500A;--green-light:#EAF3DE;--red:#A32D2D;--red-light:#FCEBEB;--blue:#0C447C;--blue-light:#E6F1FB;--border:#e0ddd5;--bg:#f5f4f1;--bg2:#faf9f7;--text:#1a1a1a;--text2:#666;--text3:#999}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:0.5px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nav-btn{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-family:inherit;color:var(--text3);font-size:10px;font-weight:500}
+.nav-btn.active{color:var(--orange)}
+.nav-btn i{font-size:22px}
+
+/* HEADER */
+.page-header{background:var(--orange);color:#fff;padding:16px 18px 14px;position:sticky;top:0;z-index:50}
+.page-header h1{font-size:17px;font-weight:600;margin:0}
+.page-header p{font-size:12px;opacity:.8;margin-top:2px}
+
+/* CARDS */
+.card{background:#fff;border:0.5px solid var(--border);border-radius:12px;margin:12px;overflow:hidden}
+.card-header{padding:14px 16px;border-bottom:0.5px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:6px}
+.card-body{padding:14px 16px}
+
+/* FORM */
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.field label .req{color:var(--red);margin-left:2px}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;background:var(--bg2);color:var(--text);outline:none;-webkit-appearance:none;appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--orange);background:#fff}
+.field textarea{min-height:80px;resize:vertical}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+/* BUTTONS */
+.btn{padding:12px 20px;border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;border:0.5px solid var(--border);background:#fff;color:var(--text);display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:10px;transition:all .15s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--orange);color:#fff;border-color:var(--orange)}
+.btn.primary:active{background:var(--orange-dark)}
+.btn.success{background:var(--green-light);color:var(--green);border-color:#C0DD97}
+.btn.danger{background:var(--red-light);color:var(--red);border-color:#F7C1C1}
+.btn.sm{padding:8px 14px;font-size:13px;width:auto;margin-bottom:0}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;gap:8px;padding:0 12px 12px}
+.btn-row .btn{margin-bottom:0}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:5px;font-weight:600}
+.badge.pending{background:var(--orange-light);color:var(--orange-dark)}
+.badge.done{background:var(--green-light);color:var(--green)}
+.badge.missing{background:var(--red-light);color:var(--red)}
+.badge.sent{background:var(--blue-light);color:var(--blue)}
+
+/* INSPECTOR SELECT */
+.inspector-card{background:#fff;border:0.5px solid var(--border);border-radius:12px;padding:20px;margin:12px;text-align:center}
+.inspector-avatar{width:64px;height:64px;border-radius:50%;background:var(--orange-light);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;color:var(--orange);margin:0 auto 12px}
+.inspector-list{display:flex;flex-direction:column;gap:8px;margin:12px}
+.inspector-item{background:#fff;border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s}
+.inspector-item:active{background:var(--orange-light);border-color:var(--orange)}
+.inspector-item.selected{background:var(--orange-light);border-color:var(--orange)}
+.inspector-avatar-sm{width:40px;height:40px;border-radius:50%;background:var(--orange-light);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--orange);flex-shrink:0}
+
+/* PROGRESS */
+.progress-wrap{margin:12px;background:#fff;border:0.5px solid var(--border);border-radius:10px;padding:14px 16px}
+.progress-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px}
+.progress-label span:first-child{font-weight:500}
+.progress-label span:last-child{color:var(--orange);font-weight:600}
+.progress-bar-bg{background:var(--bg);border-radius:4px;height:8px;overflow:hidden}
+.progress-bar-fill{height:100%;background:var(--orange);border-radius:4px;transition:width .4s}
+
+/* INSPECTION SECTIONS */
+.section-header{padding:10px 18px 6px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;background:var(--bg)}
+.insp-field{background:#fff;border-bottom:0.5px solid var(--border);padding:14px 16px}
+.insp-field:last-child{border-bottom:none}
+.insp-field-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.insp-field-name{font-size:15px;font-weight:500;flex:1;margin-right:8px}
+.insp-field-name .req{color:var(--red);margin-left:2px;font-size:12px}
+.insp-field input,.insp-field select,.insp-field textarea{width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;background:var(--bg2);color:var(--text);outline:none;-webkit-appearance:none;appearance:none}
+.insp-field input:focus,.insp-field select:focus,.insp-field textarea:focus{border-color:var(--orange);background:#fff}
+.insp-field textarea{min-height:70px;resize:vertical}
+.insp-field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.media-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.media-btn{padding:8px 12px;font-size:12px;border-radius:8px;border:0.5px solid var(--border);background:var(--bg2);cursor:pointer;color:var(--text2);font-family:inherit;display:flex;align-items:center;gap:5px;font-weight:500}
+.media-btn.recording{background:var(--red-light);color:var(--red);border-color:#F7C1C1}
+.photo-preview{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.photo-thumb{width:56px;height:56px;border-radius:6px;object-fit:cover;border:0.5px solid var(--border)}
+.voice-note{font-size:12px;color:var(--text2);margin-top:6px;padding:6px 10px;background:var(--bg2);border-radius:6px;font-style:italic;display:flex;align-items:flex-start;gap:5px}
+.rating-row{display:flex;gap:8px;margin-top:4px}
+.rating-btn{width:44px;height:44px;border-radius:50%;border:0.5px solid var(--border);background:var(--bg2);font-size:16px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:var(--text2);transition:all .15s}
+.rating-btn.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+
+/* MISSING BANNER */
+.missing-banner{background:var(--red-light);border:0.5px solid #F7C1C1;border-radius:10px;padding:12px 14px;margin:12px;display:flex;gap:10px;align-items:flex-start}
+.missing-banner i{color:var(--red);font-size:20px;flex-shrink:0;margin-top:1px}
+.missing-content{font-size:13px;color:var(--red)}
+.missing-content strong{display:block;margin-bottom:4px;font-size:14px}
+
+/* REPORT PREVIEW */
+.report-section{margin-bottom:0}
+.report-section-header{padding:10px 16px;background:var(--bg2);border-bottom:0.5px solid var(--border);font-size:11px;font-weight:600;color:var(--orange);text-transform:uppercase;letter-spacing:.05em}
+.report-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 16px;border-bottom:0.5px solid var(--border);gap:10px}
+.report-row:last-child{border-bottom:none}
+.report-row-label{font-size:13px;color:var(--text2);flex-shrink:0;max-width:50%}
+.report-row-value{font-size:13px;font-weight:500;text-align:right;word-break:break-word}
+.report-row-value.good{color:var(--green)}
+.report-row-value.bad{color:var(--red)}
+.report-row-value.warn{color:var(--orange-dark)}
+
+/* ATTENTION ITEMS */
+.attention-item{padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.attention-item:last-child{border-bottom:none}
+.priority-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;flex-shrink:0;margin-top:2px}
+.priority-badge.HIGH{background:var(--red-light);color:var(--red)}
+.priority-badge.MEDIUM{background:var(--orange-light);color:var(--orange-dark)}
+.priority-badge.LOW{background:var(--green-light);color:var(--green)}
+
+/* STEP FLOW */
+.step-flow{display:flex;align-items:center;padding:16px;background:#fff;border-bottom:0.5px solid var(--border)}
+.step{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px}
+.step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:0.5px solid var(--border);background:#fff;color:var(--text3);transition:all .3s}
+.step-circle.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+.step-circle.done{background:var(--green-light);color:var(--green);border-color:#C0DD97}
+.step-label{font-size:9px;color:var(--text3);text-align:center;line-height:1.3}
+.step-line{flex:1;height:0.5px;background:var(--border);max-width:30px}
+
+/* SETTINGS */
+.settings-section{margin:12px}
+.settings-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;margin-top:16px}
+.settings-label:first-child{margin-top:0}
+
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;display:flex;align-items:center;gap:8px;z-index:200;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1}
+
+/* SEND SUCCESS */
+.success-screen{text-align:center;padding:40px 24px}
+.success-screen i{font-size:64px;color:var(--green);display:block;margin-bottom:16px}
+.success-screen h2{font-size:22px;font-weight:600;margin-bottom:8px}
+.success-screen p{font-size:14px;color:var(--text2);line-height:1.6}
+
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+
+<!-- SCREEN: LOGIN -->
+<div id="screen-login" class="screen active">
+  <div style="background:var(--orange);padding:40px 24px 30px;text-align:center">
+    <div style="width:64px;height:64px;background:rgba(255,255,255,.2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:32px;color:#fff"><i class="ti ti-clipboard-check"></i></div>
+    <h1 style="font-size:22px;font-weight:600;color:#fff;margin-bottom:4px">RV Inspector Pro</h1>
+    <p style="font-size:13px;color:rgba(255,255,255,.75)">Select your inspector profile to begin</p>
+  </div>
+  <div style="padding:20px 0">
+    <div id="inspector-list" class="inspector-list"></div>
+    <div style="padding:0 12px;margin-top:4px">
+      <button class="btn" onclick="showAddInspector()"><i class="ti ti-plus"></i> Add new inspector</button>
+    </div>
+    <div id="add-inspector-form" style="display:none;padding:0 12px;margin-top:8px">
+      <div class="card" style="margin:0">
+        <div class="card-body">
+          <div class="field">
+            <label>Full name</label>
+            <input type="text" id="new-inspector-name" placeholder="Inspector full name"/>
+          </div>
+          <div class="field">
+            <label>Email (for CC on reports)</label>
+            <input type="email" id="new-inspector-email" placeholder="inspector@email.com"/>
+          </div>
+          <button class="btn primary" onclick="addInspector()"><i class="ti ti-check"></i> Add inspector</button>
+          <button class="btn" onclick="hideAddInspector()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: DASHBOARD -->
+<div id="screen-dashboard" class="screen">
+  <div class="page-header">
+    <h1>Dashboard</h1>
+    <p id="dash-inspector-name">Welcome back</p>
+  </div>
+  <div style="padding:12px">
+    <button class="btn primary" onclick="startNewInspection()" style="font-size:17px;padding:16px"><i class="ti ti-plus"></i> Start new inspection</button>
+  </div>
+  <div id="recent-inspections"></div>
+</div>
+
+<!-- SCREEN: NEW INSPECTION - VEHICLE ID -->
+<div id="screen-vehicle" class="screen">
+  <div class="page-header">
+    <h1>Vehicle Identification</h1>
+    <p>All fields required</p>
+  </div>
+  <div style="padding:0 12px 12px">
+    <button class="btn" onclick="captureLabel()" style="margin-top:12px;margin-bottom:4px"><i class="ti ti-camera"></i> Photograph VIN / certification label</button>
+  </div>
+  <div class="card" style="margin-top:0">
+    <div class="card-body">
+      <div class="field"><label>Make<span class="req">*</span></label><input type="text" id="v-make" placeholder="e.g. Airstream" oninput="autoSave()"/></div>
+      <div class="field"><label>Model<span class="req">*</span></label><input type="text" id="v-model" placeholder="e.g. 25FB Flying Cloud" oninput="autoSave()"/></div>
+      <div class="field"><label>Year<span class="req">*</span></label><input type="number" id="v-year" placeholder="e.g. 2023" min="1970" max="2030" oninput="autoSave()"/></div>
+      <div class="field"><label>VIN<span class="req">*</span></label><input type="text" id="v-vin" placeholder="Full VIN number" oninput="autoSave()"/></div>
+      <div class="field"><label>Length (ft)<span class="req">*</span></label><input type="text" id="v-length" placeholder="e.g. 25" oninput="autoSave()"/></div>
+      <div class="field"><label>GVWR (lbs)<span class="req">*</span></label><input type="text" id="v-gvwr" placeholder="e.g. 7300" oninput="autoSave()"/></div>
+    </div>
+  </div>
+  <div style="padding:0 12px">
+    <button class="btn primary" onclick="goToInspection()"><i class="ti ti-arrow-right"></i> Continue to inspection</button>
+  </div>
+</div>
+
+<!-- SCREEN: INSPECTION -->
+<div id="screen-inspection" class="screen">
+  <div class="page-header">
+    <h1>Inspection</h1>
+    <p id="insp-vehicle-label">—</p>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Completion</span><span id="insp-pct">0%</span></div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="insp-bar" style="width:0%"></div></div>
+  </div>
+  <div id="inspection-fields"></div>
+  <div style="padding:12px">
+    <button class="btn primary" onclick="completeInspection()"><i class="ti ti-circle-check"></i> Inspection complete</button>
+    <button class="btn" onclick="checkMissing()"><i class="ti ti-alert-circle"></i> Check missing fields</button>
+  </div>
+</div>
+
+<!-- SCREEN: REVIEW -->
+<div id="screen-review" class="screen">
+  <div class="page-header">
+    <h1>Review & Validate</h1>
+    <p>Verify all data before approving</p>
+  </div>
+  <div class="step-flow">
+    <div class="step"><div class="step-circle done" id="sr1"><i class="ti ti-check"></i></div><div class="step-label">Inspection<br>done</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-circle active" id="sr2">2</div><div class="step-label">Review<br>& edit</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-circle" id="sr3">3</div><div class="step-label">Approve<br>& send</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-circle" id="sr4">4</div><div class="step-label">Delivered</div></div>
+  </div>
+  <div id="missing-banner-review" style="display:none" class="missing-banner">
+    <i class="ti ti-alert-circle"></i>
+    <div class="missing-content"><strong id="missing-count-label">Missing fields</strong><div id="missing-list-review"></div></div>
+  </div>
+  <div id="review-content"></div>
+  <div style="padding:12px">
+    <button class="btn primary" id="approve-btn" onclick="approveAndSend()"><i class="ti ti-send"></i> Approve & send report ↗</button>
+    <button class="btn" onclick="goBackToInspection()"><i class="ti ti-arrow-left"></i> Back to inspection</button>
+  </div>
+</div>
+
+<!-- SCREEN: SENT -->
+<div id="screen-sent" class="screen">
+  <div style="padding:40px 24px;text-align:center">
+    <div style="width:80px;height:80px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+      <i class="ti ti-circle-check" style="font-size:44px;color:var(--green)"></i>
+    </div>
+    <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Report sent!</h2>
+    <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:24px" id="sent-details">Inspection report and CSV emailed successfully.</p>
+    <div class="card" style="text-align:left;margin:0 0 16px">
+      <div class="card-body" id="sent-summary"></div>
+    </div>
+    <button class="btn primary" onclick="startNewInspection()"><i class="ti ti-plus"></i> Start new inspection</button>
+    <button class="btn" onclick="showTab('dashboard')"><i class="ti ti-home"></i> Go to dashboard</button>
+  </div>
+</div>
+
+<!-- SCREEN: SETTINGS -->
+<div id="screen-settings" class="screen">
+  <div class="page-header"><h1>Settings</h1><p>EmailJS configuration</p></div>
+  <div style="padding:12px">
+    <div class="settings-label">EmailJS credentials</div>
+    <div class="card" style="margin:0">
+      <div class="card-body">
+        <div class="field"><label>Public key</label><input type="text" id="s-pubkey" placeholder="glhRob1MEN6QNgOEb"/></div>
+        <div class="field"><label>Service ID</label><input type="text" id="s-service" placeholder="service_yn79fyq"/></div>
+        <div class="field"><label>Template ID</label><input type="text" id="s-template" placeholder="template_jr6k073"/></div>
+      </div>
+    </div>
+    <div class="settings-label">Report settings</div>
+    <div class="card" style="margin:0">
+      <div class="card-body">
+        <div class="field"><label>Company name</label><input type="text" id="s-company" placeholder="Your company name"/></div>
+        <div class="field"><label>Send reports to</label><input type="email" id="s-toemail" value="jeff.eiberger@gmail.com"/></div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn primary" onclick="saveSettings()"><i class="ti ti-check"></i> Save settings</button>
+      <button class="btn" onclick="testEmail()"><i class="ti ti-wifi"></i> Send test email</button>
+    </div>
+    <div id="settings-result" style="display:none;margin-top:10px;padding:12px;border-radius:8px;font-size:13px"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button class="nav-btn active" id="nav-dashboard" onclick="showTab('dashboard')"><i class="ti ti-home"></i>Home</button>
+  <button class="nav-btn" id="nav-inspection" onclick="showTab('inspection')"><i class="ti ti-clipboard-list"></i>Inspect</button>
+  <button class="nav-btn" id="nav-review" onclick="showTab('review')"><i class="ti ti-eye"></i>Review</button>
+  <button class="nav-btn" id="nav-settings" onclick="showTab('settings')"><i class="ti ti-settings"></i>Settings</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="photo-input" accept="image/*" multiple>
+<input type="file" id="label-input" accept="image/*" capture="environment">
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const CFG = {
+  pubkey: 'glhRob1MEN6QNgOEb',
+  service: 'service_yn79fyq',
+  template: 'template_jr6k073',
+  toEmail: 'jeff.eiberger@gmail.com',
+  company: 'RV Inspection Services'
+};
+
+// ── INSPECTION TEMPLATE ─────────────────────────────────────────────────────
+const TEMPLATE = [
+  {section:'Exterior', fields:[
+    {id:'ext_overall',name:'Overall exterior condition',type:'select',required:true},
+    {id:'ext_glass',name:'Glass and windows',type:'select',required:true},
+    {id:'ext_roof',name:'Roof condition',type:'select',required:true},
+    {id:'ext_seals',name:'Seals and caulking',type:'select',required:true},
+    {id:'ext_hitch',name:'Hitch and coupler',type:'select',required:true},
+    {id:'ext_jacks',name:'Stabilizer jacks',type:'select',required:true},
+    {id:'ext_landing',name:'Landing gear',type:'select',required:true},
+    {id:'ext_awning',name:'Awning',type:'select',required:false},
+    {id:'ext_lights',name:'Exterior lights',type:'select',required:true},
+    {id:'ext_tanks',name:'Water and waste tanks',type:'select',required:true},
+    {id:'ext_propane',name:'Propane tanks',type:'select',required:true},
+    {id:'ext_photos',name:'Exterior photos',type:'photo',required:true},
+    {id:'ext_notes',name:'Exterior notes',type:'textarea',required:false},
+  ]},
+  {section:'Tires', fields:[
+    {id:'tire_fl_psi',name:'Front left PSI',type:'number',required:true},
+    {id:'tire_fr_psi',name:'Front right PSI',type:'number',required:true},
+    {id:'tire_rl_psi',name:'Rear left PSI',type:'number',required:true},
+    {id:'tire_rr_psi',name:'Rear right PSI',type:'number',required:true},
+    {id:'tire_condition',name:'Overall tire condition',type:'select',required:true},
+    {id:'tire_notes',name:'Tire notes',type:'textarea',required:false},
+  ]},
+  {section:'Interior', fields:[
+    {id:'int_overall',name:'Overall interior condition',type:'select',required:true},
+    {id:'int_walls',name:'Walls and ceilings',type:'select',required:true},
+    {id:'int_floor',name:'Flooring',type:'select',required:true},
+    {id:'int_windows',name:'Windows and blinds',type:'select',required:true},
+    {id:'int_cabinets',name:'Cabinets and storage',type:'select',required:true},
+    {id:'int_doors',name:'Doors and latches',type:'select',required:true},
+    {id:'int_bedroom',name:'Bedroom condition',type:'select',required:true},
+    {id:'int_bathroom',name:'Bathroom condition',type:'select',required:true},
+    {id:'int_kitchen',name:'Kitchen and dining',type:'select',required:true},
+    {id:'int_photos',name:'Interior photos',type:'photo',required:true},
+    {id:'int_notes',name:'Interior notes',type:'textarea',required:false},
+  ]},
+  {section:'Appliances', fields:[
+    {id:'app_fridge',name:'Refrigerator',type:'select',required:true},
+    {id:'app_stove',name:'Stovetop',type:'select',required:true},
+    {id:'app_microwave',name:'Microwave / air fryer',type:'select',required:false},
+    {id:'app_tv',name:'Television',type:'select',required:false},
+    {id:'app_notes',name:'Appliance notes',type:'textarea',required:false},
+  ]},
+  {section:'Mechanical', fields:[
+    {id:'mech_waterheater',name:'Water heater',type:'select',required:true},
+    {id:'mech_furnace',name:'Furnace / heating',type:'select',required:true},
+    {id:'mech_ac',name:'Air conditioning',type:'select',required:true},
+    {id:'mech_plumbing',name:'Plumbing',type:'select',required:true},
+    {id:'mech_propane_sys',name:'Propane system',type:'select',required:true},
+    {id:'mech_generator',name:'Generator',type:'select',required:false},
+    {id:'mech_notes',name:'Mechanical notes',type:'textarea',required:false},
+  ]},
+  {section:'Electrical', fields:[
+    {id:'elec_shore',name:'Shore power',type:'select',required:true},
+    {id:'elec_batteries',name:'Battery system',type:'select',required:true},
+    {id:'elec_converter',name:'Converter / charger',type:'select',required:true},
+    {id:'elec_panel',name:'Breaker panel',type:'select',required:true},
+    {id:'elec_lights',name:'Interior lights',type:'select',required:true},
+    {id:'elec_notes',name:'Electrical notes',type:'textarea',required:false},
+  ]},
+  {section:'Safety', fields:[
+    {id:'safe_extinguisher',name:'Fire extinguisher',type:'select',required:true},
+    {id:'safe_co',name:'CO detector',type:'select',required:true},
+    {id:'safe_propane_det',name:'Propane detector',type:'select',required:true},
+    {id:'safe_smoke',name:'Smoke detector',type:'select',required:true},
+    {id:'safe_exit',name:'Emergency exit',type:'select',required:true},
+    {id:'safe_firstaid',name:'First aid kit',type:'select',required:false},
+  ]},
+  {section:'Documentation', fields:[
+    {id:'doc_service',name:'Service records',type:'select',required:false},
+    {id:'doc_warranty',name:'Warranty status',type:'select',required:false},
+    {id:'doc_manual',name:'Owner manual present',type:'select',required:false},
+    {id:'doc_registration',name:'Registration present',type:'select',required:false},
+    {id:'doc_rating',name:'Overall condition rating',type:'rating',required:true},
+    {id:'doc_notes',name:'General notes',type:'textarea',required:false},
+  ]},
+];
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let inspectors = JSON.parse(localStorage.getItem('rv_inspectors')||'[]');
+if(!inspectors.length) inspectors = [
+  {id:'i1',name:'Jeff Iberger',email:'jeff.eiberger@gmail.com'},
+];
+let currentInspector = null;
+let currentInspection = {vehicle:{},data:{},photos:{},voice:{},date:new Date().toISOString().split('T')[0]};
+let mediaRecorders = {}, isRecording = {};
+let completedInspections = JSON.parse(localStorage.getItem('rv_completed')||'[]');
+
+// ── INSPECTOR ────────────────────────────────────────────────────────────────
+function renderInspectorList(){
+  const el = document.getElementById('inspector-list');
+  el.innerHTML = inspectors.map(i=>`
+    <div class="inspector-item ${currentInspector&&currentInspector.id===i.id?'selected':''}" onclick="selectInspector('${i.id}')">
+      <div class="inspector-avatar-sm">${i.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)}</div>
+      <div style="flex:1"><div style="font-size:15px;font-weight:500">${i.name}</div><div style="font-size:12px;color:var(--text2)">${i.email||'No email set'}</div></div>
+      <i class="ti ti-chevron-right" style="color:var(--text3)"></i>
+    </div>`).join('');
+}
+
+function selectInspector(id){
+  currentInspector = inspectors.find(i=>i.id===id);
+  document.getElementById('dash-inspector-name').textContent = 'Welcome, '+currentInspector.name;
+  showTab('dashboard');
+  renderDashboard();
+}
+
+function showAddInspector(){document.getElementById('add-inspector-form').style.display='block';}
+function hideAddInspector(){document.getElementById('add-inspector-form').style.display='none';}
+
+function addInspector(){
+  const name = document.getElementById('new-inspector-name').value.trim();
+  const email = document.getElementById('new-inspector-email').value.trim();
+  if(!name){showToast('Please enter a name');return;}
+  const insp = {id:'i'+Date.now(),name,email};
+  inspectors.push(insp);
+  localStorage.setItem('rv_inspectors',JSON.stringify(inspectors));
+  hideAddInspector();
+  document.getElementById('new-inspector-name').value='';
+  document.getElementById('new-inspector-email').value='';
+  renderInspectorList();
+  selectInspector(insp.id);
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const el = document.getElementById('recent-inspections');
+  if(!completedInspections.length){
+    el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3)"><i class="ti ti-clipboard-off" style="font-size:36px;display:block;margin-bottom:8px;opacity:.3"></i>No inspections yet</div>';
+    return;
+  }
+  el.innerHTML='<div style="padding:12px 16px 6px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Recent inspections</div>'+
+    completedInspections.slice().reverse().slice(0,10).map(i=>`
+    <div class="card" style="margin:0 12px 8px">
+      <div class="card-body" style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:500">${i.vehicle.year||''} ${i.vehicle.make||''} ${i.vehicle.model||''}</div>
+          <div style="font-size:12px;color:var(--text2)">VIN: ${i.vehicle.vin||'—'} · ${i.date}</div>
+          <div style="font-size:12px;color:var(--text2)">Inspector: ${i.inspector}</div>
+        </div>
+        <span class="badge sent"><i class="ti ti-circle-check"></i> Sent</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── NEW INSPECTION ───────────────────────────────────────────────────────────
+function startNewInspection(){
+  if(!currentInspector){showScreen('login');return;}
+  currentInspection = {vehicle:{},data:{},photos:{},voice:{},date:new Date().toISOString().split('T')[0]};
+  clearVehicleForm();
+  showScreen('vehicle');
+}
+
+function clearVehicleForm(){
+  ['make','model','year','vin','length','gvwr'].forEach(f=>{
+    const el=document.getElementById('v-'+f);
+    if(el) el.value='';
+  });
+}
+
+function autoSave(){
+  currentInspection.vehicle = {
+    make: document.getElementById('v-make').value,
+    model: document.getElementById('v-model').value,
+    year: document.getElementById('v-year').value,
+    vin: document.getElementById('v-vin').value,
+    length: document.getElementById('v-length').value,
+    gvwr: document.getElementById('v-gvwr').value,
+  };
+}
+
+function captureLabel(){
+  document.getElementById('label-input').click();
+}
+
+document.getElementById('label-input').onchange = function(){
+  if(!this.files.length) return;
+  showToast('Photo captured — reading label data...');
+  setTimeout(()=>showToast('Please fill in the fields from the label'),1500);
+  this.value='';
+};
+
+function goToInspection(){
+  autoSave();
+  const v = currentInspection.vehicle;
+  const missing = ['make','model','year','vin','length','gvwr'].filter(f=>!v[f]||v[f].toString().trim()==='');
+  if(missing.length){showToast('Please fill in: '+missing.join(', '));return;}
+  document.getElementById('insp-vehicle-label').textContent = (v.year||'')+' '+(v.make||'')+' '+(v.model||'');
+  renderInspectionFields();
+  showScreen('inspection');
+}
+
+// ── INSPECTION FIELDS ────────────────────────────────────────────────────────
+function renderInspectionFields(){
+  const c = document.getElementById('inspection-fields');
+  c.innerHTML = '';
+  TEMPLATE.forEach(sec=>{
+    const sh = document.createElement('div');
+    sh.className = 'section-header';
+    sh.textContent = sec.section;
+    c.appendChild(sh);
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'background:#fff;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);margin-bottom:8px';
+    sec.fields.forEach(f=>wrap.appendChild(makeField(f)));
+    c.appendChild(wrap);
+  });
+  updateProgress();
+}
+
+function makeField(f){
+  const wrap = document.createElement('div');
+  wrap.className = 'insp-field';
+  wrap.id = 'fw-'+f.id;
+
+  const top = document.createElement('div');
+  top.className = 'insp-field-top';
+  top.innerHTML = `<div class="insp-field-name">${f.name}${f.required?'<span class="req">*</span>':''}</div>
+    <span class="badge ${getStatus(f)?'done':'missing'}" id="badge-${f.id}">${getStatus(f)?'<i class="ti ti-check"></i> Done':'<i class="ti ti-clock"></i> Needed'}</span>`;
+  wrap.appendChild(top);
+
+  if(f.type==='select'){
+    const sel = document.createElement('select');
+    sel.id = 'inp-'+f.id;
+    sel.innerHTML = '<option value="">Select...</option>'+
+      ['Pass','Fail','N/A','Good','Fair','Poor','Functional','Not Functional','Present','Missing','Tested Good','Cannot Determine','Skipped','Not Provided','Not Tested']
+      .map(o=>`<option ${currentInspection.data[f.id]===o?'selected':''} value="${o}">${o}</option>`).join('');
+    sel.onchange = ()=>{saveData(f.id,sel.value);};
+    wrap.appendChild(sel);
+  } else if(f.type==='number'||f.type==='text'){
+    const inp = document.createElement('input');
+    inp.type = f.type; inp.id = 'inp-'+f.id;
+    inp.placeholder = f.type==='number'?'Enter value':'Enter text';
+    inp.value = currentInspection.data[f.id]||'';
+    inp.oninput = ()=>saveData(f.id,inp.value);
+    wrap.appendChild(inp);
+  } else if(f.type==='textarea'){
+    const ta = document.createElement('textarea');
+    ta.id = 'inp-'+f.id;
+    ta.placeholder = 'Enter notes...';
+    ta.value = currentInspection.data[f.id]||'';
+    ta.oninput = ()=>saveData(f.id,ta.value);
+    wrap.appendChild(ta);
+  } else if(f.type==='rating'){
+    const row = document.createElement('div');
+    row.className = 'rating-row';
+    const cur = parseInt(currentInspection.data[f.id])||0;
+    [1,2,3,4,5].forEach(n=>{
+      const btn = document.createElement('button');
+      btn.className = 'rating-btn'+(cur>=n?' active':'');
+      btn.textContent = n;
+      btn.onclick = ()=>{saveData(f.id,String(n));renderInspectionFields();};
+      row.appendChild(btn);
+    });
+    wrap.appendChild(row);
+  } else if(f.type==='photo'){
+    const photos = currentInspection.photos[f.id]||[];
+    const prev = document.createElement('div');
+    prev.className = 'photo-preview';
+    prev.id = 'photos-'+f.id;
+    photos.forEach(p=>{const img=document.createElement('img');img.src=p;img.className='photo-thumb';img.alt='photo';prev.appendChild(img);});
+    if(photos.length){const note=document.createElement('div');note.className='voice-note';note.innerHTML=`<i class="ti ti-check" style="color:var(--green)"></i> ${photos.length} photo${photos.length!==1?'s':''} added`;wrap.appendChild(note);}
+    wrap.appendChild(prev);
+  }
+
+  // Media buttons
+  if(f.type!=='rating'){
+    const mr = document.createElement('div');
+    mr.className = 'media-row';
+    const vBtn = document.createElement('button');
+    vBtn.className = 'media-btn';
+    vBtn.id = 'vbtn-'+f.id;
+    vBtn.innerHTML = '<i class="ti ti-microphone"></i> Voice input';
+    vBtn.onclick = ()=>handleVoice(f.id, vBtn);
+    mr.appendChild(vBtn);
+    if(f.type==='photo'||f.type==='text'||f.type==='textarea'){
+      const pBtn = document.createElement('button');
+      pBtn.className = 'media-btn';
+      pBtn.innerHTML = '<i class="ti ti-camera"></i> Add photo';
+      pBtn.onclick = ()=>openPhotoCapture(f.id);
+      mr.appendChild(pBtn);
+    }
+    wrap.appendChild(mr);
+  }
+
+  if(currentInspection.voice[f.id]){
+    const vn = document.createElement('div');
+    vn.className = 'voice-note';
+    vn.innerHTML = `<i class="ti ti-microphone"></i> ${currentInspection.voice[f.id]}`;
+    wrap.appendChild(vn);
+  }
+
+  return wrap;
+}
+
+function saveData(id,val){
+  currentInspection.data[id]=val;
+  updateProgress();
+  const f = getField(id);
+  if(!f) return;
+  const badge = document.getElementById('badge-'+id);
+  if(badge){
+    const done = getStatus(f);
+    badge.className='badge '+(done?'done':'missing');
+    badge.innerHTML = done?'<i class="ti ti-check"></i> Done':'<i class="ti ti-clock"></i> Needed';
+  }
+}
+
+function getField(id){
+  for(const sec of TEMPLATE) for(const f of sec.fields) if(f.id===id) return f;
+  return null;
+}
+
+function getStatus(f){
+  if(!f.required) return true;
+  if(f.type==='photo') return (currentInspection.photos[f.id]||[]).length>0;
+  return !!(currentInspection.data[f.id]);
+}
+
+function updateProgress(){
+  const all = TEMPLATE.flatMap(s=>s.fields);
+  const req = all.filter(f=>f.required);
+  const done = req.filter(f=>getStatus(f)).length;
+  const pct = req.length?Math.round(done/req.length*100):100;
+  document.getElementById('insp-bar').style.width=pct+'%';
+  document.getElementById('insp-pct').textContent=pct+'%';
+}
+
+function getMissingFields(){
+  return TEMPLATE.flatMap(s=>s.fields.filter(f=>f.required&&!getStatus(f)));
+}
+
+function checkMissing(){
+  const missing = getMissingFields();
+  if(!missing.length){showToast('All required fields complete!');return;}
+  showToast(missing.length+' required fields still needed');
+}
+
+function completeInspection(){
+  const missing = getMissingFields();
+  if(missing.length){
+    document.getElementById('missing-banner-review').style.display='flex';
+    document.getElementById('missing-count-label').textContent = missing.length+' required field'+( missing.length!==1?'s':'')+' still missing:';
+    document.getElementById('missing-list-review').innerHTML = missing.map(f=>'• '+f.name).join('<br>');
+  } else {
+    document.getElementById('missing-banner-review').style.display='none';
+  }
+  renderReview();
+  showScreen('review');
+  showTab('review');
+}
+
+// ── VOICE ────────────────────────────────────────────────────────────────────
+function handleVoice(id, btn){
+  if(isRecording[id]){
+    if(mediaRecorders[id]) mediaRecorders[id].stop();
+    isRecording[id]=false;
+    btn.className='media-btn';
+    btn.innerHTML='<i class="ti ti-microphone"></i> Voice input';
+    return;
+  }
+  if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
+    const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang='en-US'; rec.continuous=false; rec.interimResults=false;
+    isRecording[id]=true;
+    btn.className='media-btn recording';
+    btn.innerHTML='<i class="ti ti-microphone-off"></i> Listening...';
+    rec.onresult=e=>{
+      const txt=e.results[0][0].transcript;
+      currentInspection.voice[id]=txt;
+      const inp=document.getElementById('inp-'+id);
+      if(inp&&(inp.tagName==='INPUT'||inp.tagName==='TEXTAREA')&&!inp.value){inp.value=txt;saveData(id,txt);}
+      else saveData(id,txt);
+      isRecording[id]=false;
+      btn.className='media-btn';
+      btn.innerHTML='<i class="ti ti-microphone"></i> Voice input';
+      renderInspectionFields();
+    };
+    rec.onerror=()=>{
+      isRecording[id]=false;
+      btn.className='media-btn';
+      btn.innerHTML='<i class="ti ti-microphone"></i> Voice input';
+      fallbackVoice(id);
+    };
+    rec.onend=()=>{
+      if(isRecording[id]){isRecording[id]=false;btn.className='media-btn';btn.innerHTML='<i class="ti ti-microphone"></i> Voice input';}
+    };
+    rec.start();
+  } else {
+    fallbackVoice(id);
+  }
+}
+
+function fallbackVoice(id){
+  const txt = prompt('Voice unavailable. Type your notes:');
+  if(txt){
+    currentInspection.voice[id]=txt;
+    const inp=document.getElementById('inp-'+id);
+    if(inp&&(inp.tagName==='INPUT'||inp.tagName==='TEXTAREA')){inp.value=txt;saveData(id,txt);}
+    else saveData(id,txt);
+    renderInspectionFields();
+  }
+}
+
+// ── PHOTOS ───────────────────────────────────────────────────────────────────
+let currentPhotoField = null;
+function openPhotoCapture(id){
+  currentPhotoField=id;
+  document.getElementById('photo-input').click();
+}
+document.getElementById('photo-input').onchange=function(){
+  if(!this.files.length) return;
+  Array.from(this.files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      if(!currentInspection.photos[currentPhotoField]) currentInspection.photos[currentPhotoField]=[];
+      currentInspection.photos[currentPhotoField].push(e.target.result);
+      saveData(currentPhotoField,'[photo]');
+      const prev=document.getElementById('photos-'+currentPhotoField);
+      if(prev){const img=document.createElement('img');img.src=e.target.result;img.className='photo-thumb';img.alt='photo';prev.appendChild(img);}
+    };
+    reader.readAsDataURL(file);
+  });
+  this.value='';
+};
+
+// ── REVIEW ───────────────────────────────────────────────────────────────────
+function renderReview(){
+  const c = document.getElementById('review-content');
+  const v = currentInspection.vehicle;
+  const d = currentInspection.data;
+
+  const sc = (val)=>{
+    if(!val) return '';
+    if(['Pass','Good','Functional','Present','Tested Good','Excellent'].includes(val)) return 'good';
+    if(['Fail','Poor','Not Functional','Missing','Cannot Determine'].includes(val)) return 'bad';
+    if(['Fair','Skipped','N/A','Not Tested','Not Provided','Cannot Determine'].includes(val)) return 'warn';
+    return '';
+  };
+
+  const attention = [];
+  const tireFL = parseFloat(d['tire_fl_psi']);
+  const tireFR = parseFloat(d['tire_fr_psi']);
+  const tireRL = parseFloat(d['tire_rl_psi']);
+  const tireRR = parseFloat(d['tire_rr_psi']);
+  if(tireFL&&tireFL<75) attention.push({priority:'HIGH',item:'Front left tire — '+tireFL+' PSI',action:'Inspect for slow leak; inflate before use'});
+  if(tireFR&&tireFR<75) attention.push({priority:'HIGH',item:'Front right tire — '+tireFR+' PSI',action:'Inspect for slow leak; inflate before use'});
+  if(tireRL&&tireRL<75) attention.push({priority:'HIGH',item:'Rear left tire — '+tireRL+' PSI',action:'Inspect for slow leak; inflate before use'});
+  if(tireRR&&tireRR<75) attention.push({priority:'HIGH',item:'Rear right tire — '+tireRR+' PSI',action:'Inspect for slow leak; inflate before use'});
+  if(d['safe_firstaid']==='Missing'||!d['safe_firstaid']) attention.push({priority:'LOW',item:'First aid kit',action:'Add properly stocked kit to unit'});
+  if(d['ext_roof']==='Cannot Determine') attention.push({priority:'MEDIUM',item:'Roof condition not inspected',action:'Schedule inspection with ladder'});
+  TEMPLATE.flatMap(s=>s.fields).filter(f=>f.required&&!getStatus(f)).forEach(f=>{
+    attention.push({priority:'MEDIUM',item:f.name+' not completed',action:'Complete this field before finalizing'});
+  });
+
+  let html = '';
+
+  // Summary strip
+  const req=TEMPLATE.flatMap(s=>s.fields).filter(f=>f.required);
+  const done=req.filter(f=>getStatus(f)).length;
+  const pct=Math.round(done/req.length*100);
+  const color=pct>=90?'var(--green)':pct>=70?'var(--orange)':'var(--red)';
+  html+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px;background:var(--bg)">
+    <div style="background:#fff;border:0.5px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:${color}">${pct}%</div><div style="font-size:10px;color:var(--text3);margin-top:2px">Completion</div></div>
+    <div style="background:var(--green-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:13px;font-weight:600;color:var(--green)">${d['doc_rating']?d['doc_rating']+'/5':'—'}</div><div style="font-size:10px;color:var(--green);margin-top:2px">Rating</div></div>
+    <div style="background:${attention.length?'var(--red-light)':'var(--green-light)'};border-radius:10px;padding:12px;text-align:center"><div style="font-size:13px;font-weight:600;color:${attention.length?'var(--red)':'var(--green)'}">${attention.length} item${attention.length!==1?'s':''}</div><div style="font-size:10px;color:${attention.length?'var(--red)':'var(--green)'};margin-top:2px">Attention</div></div>
+  </div>`;
+
+  // Vehicle ID
+  html+=`<div class="card" style="margin:0 12px 12px"><div class="report-section-header">Vehicle identification</div>`;
+  Object.entries({Make:v.make,Model:v.model,Year:v.year,VIN:v.vin,Length:v.length+' ft',GVWR:v.gvwr+' lbs'}).forEach(([l,val])=>{
+    html+=`<div class="report-row"><span class="report-row-label">${l}</span><span class="report-row-value">${val||'—'}</span></div>`;
+  });
+  html+=`<div class="report-row"><span class="report-row-label">Inspector</span><span class="report-row-value">${currentInspector?currentInspector.name:'—'}</span></div>`;
+  html+=`<div class="report-row"><span class="report-row-label">Date</span><span class="report-row-value">${currentInspection.date}</span></div></div>`;
+
+  // Attention items
+  if(attention.length){
+    html+=`<div class="card" style="margin:0 12px 12px"><div class="report-section-header" style="color:var(--red)">⚠ Items requiring attention</div>`;
+    attention.forEach(a=>{
+      html+=`<div class="attention-item"><span class="priority-badge ${a.priority}">${a.priority}</span><div><div style="font-size:13px;font-weight:500">${a.item}</div><div style="font-size:12px;color:var(--text2);margin-top:2px">${a.action}</div></div></div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // All sections
+  TEMPLATE.forEach(sec=>{
+    html+=`<div class="card" style="margin:0 12px 12px"><div class="report-section-header">${sec.section}</div>`;
+    sec.fields.forEach(f=>{
+      let val = d[f.id]||'';
+      if(f.type==='photo') val=(currentInspection.photos[f.id]||[]).length>0?(currentInspection.photos[f.id].length)+' photo(s) attached':'No photos';
+      const cls = sc(val);
+      const empty = !val&&f.required;
+      html+=`<div class="report-row"><span class="report-row-label">${f.name}${f.required?'*':''}</span><span class="report-row-value ${empty?'bad':cls}">${val||(f.required?'⚠ Missing':'—')}</span></div>`;
+    });
+    html+=`</div>`;
+  });
+
+  c.innerHTML = html;
+  c._attention = attention;
+}
+
+function goBackToInspection(){
+  showScreen('inspection');
+}
+
+// ── APPROVE & SEND ───────────────────────────────────────────────────────────
+async function approveAndSend(){
+  const key = document.getElementById('s-pubkey').value||CFG.pubkey;
+  const svc = document.getElementById('s-service').value||CFG.service;
+  const tpl = document.getElementById('s-template').value||CFG.template;
+  const toEmail = document.getElementById('s-toemail').value||CFG.toEmail;
+  const company = document.getElementById('s-company').value||CFG.company;
+  const inspEmail = currentInspector?currentInspector.email:'';
+
+  const btn = document.getElementById('approve-btn');
+  btn.disabled=true;btn.innerHTML='<i class="ti ti-loader"></i> Sending report...';
+
+  const v=currentInspection.vehicle;
+  const d=currentInspection.data;
+  const subject=`RV Inspection — ${v.year} ${v.make} ${v.model} — ${currentInspection.date}`;
+  const attention = document.getElementById('review-content')._attention||[];
+
+  // Build CSV
+  const csvHeaders=['Date','Inspector','Inspector Email','Make','Model','Year','VIN','Length','GVWR',
+    ...TEMPLATE.flatMap(s=>s.fields.filter(f=>f.type!=='photo'&&f.type!=='textarea').map(f=>f.name)),
+    'Attention Items'];
+  const csvValues=[currentInspection.date,currentInspector?currentInspector.name:'',inspEmail,
+    v.make,v.model,v.year,v.vin,v.length,v.gvwr,
+    ...TEMPLATE.flatMap(s=>s.fields.filter(f=>f.type!=='photo'&&f.type!=='textarea').map(f=>d[f.id]||'')),
+    attention.map(a=>a.priority+': '+a.item).join(' | ')];
+  const csv=[csvHeaders,csvValues].map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+
+  // Build email HTML
+  const sc=(val)=>{
+    if(['Pass','Good','Functional','Present','Tested Good','Excellent'].includes(val)) return '#27500A';
+    if(['Fail','Poor','Not Functional','Missing'].includes(val)) return '#A32D2D';
+    return '#633806';
+  };
+
+  const emailHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:680px;margin:0 auto;color:#1a1a1a">
+  <div style="background:#BA7517;color:#fff;padding:20px 24px;border-radius:10px 10px 0 0">
+    <div style="font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${company}</div>
+    <h1 style="font-size:18px;font-weight:600;margin:0 0 6px">RV Inspection Report</h1>
+    <p style="font-size:12px;opacity:.85;margin:2px 0">${v.year} ${v.make} ${v.model} · VIN: ${v.vin} · ${currentInspection.date}</p>
+    <p style="font-size:12px;opacity:.85;margin:2px 0">Inspector: ${currentInspector?currentInspector.name:'—'} · Length: ${v.length} ft · GVWR: ${v.gvwr} lbs</p>
+  </div>
+  <div style="padding:20px 24px;background:#fff;border:1px solid #e0ddd5;border-top:none;border-radius:0 0 10px 10px">
+    ${attention.length?`<div style="background:#FCEBEB;border:1px solid #F7C1C1;border-radius:8px;padding:14px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;color:#A32D2D;margin-bottom:8px">⚠ ${attention.length} item${attention.length!==1?'s':''} requiring attention</div>
+      ${attention.map(a=>`<div style="display:flex;gap:8px;margin-bottom:6px"><span style="font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;background:${a.priority==='HIGH'?'#FCEBEB':a.priority==='MEDIUM'?'#FAEEDA':'#EAF3DE'};color:${a.priority==='HIGH'?'#A32D2D':a.priority==='MEDIUM'?'#633806':'#27500A'}">${a.priority}</span><div><div style="font-size:13px;font-weight:500">${a.item}</div><div style="font-size:12px;color:#666">${a.action}</div></div></div>`).join('')}
+    </div>`:''}
+    ${TEMPLATE.map(sec=>`
+      <h2 style="font-size:12px;color:#BA7517;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e0ddd5;padding-bottom:6px;margin:16px 0 8px">${sec.section}</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px">
+      ${sec.fields.map((f,i)=>{
+        let val=d[f.id]||'';
+        if(f.type==='photo') val=(currentInspection.photos[f.id]||[]).length>0?currentInspection.photos[f.id].length+' photo(s)':'No photos';
+        return `<tr style="background:${i%2?'#fff':'#faf9f7'}"><td style="padding:5px 8px;color:#666;width:50%">${f.name}${f.required?'*':''}</td><td style="padding:5px 8px;font-weight:500;color:${val?sc(val):'#A32D2D'}">${val||(f.required?'⚠ Missing':'—')}</td></tr>`;
+      }).join('')}
+      </table>`).join('')}
+    <div style="margin-top:16px;padding:12px;background:#faf9f7;border-radius:8px;font-size:11px;color:#888;border:1px solid #e0ddd5">CSV data attached below for your records.</div>
+    <h2 style="font-size:12px;color:#BA7517;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e0ddd5;padding-bottom:6px;margin:16px 0 8px">CSV Data</h2>
+    <pre style="font-size:11px;background:#faf9f7;padding:12px;border-radius:8px;border:1px solid #e0ddd5;overflow-x:auto;white-space:pre-wrap">${csv}</pre>
+  </div></div>`;
+
+  try{
+    emailjs.init(key);
+
+    // Send to jeff
+    await emailjs.send(svc,tpl,{to_email:toEmail,subject,message:emailHTML});
+
+    // Send CC to inspector if different email
+    if(inspEmail && inspEmail!==toEmail){
+      await emailjs.send(svc,tpl,{to_email:inspEmail,subject:'[Your copy] '+subject,message:emailHTML});
+    }
+
+    // Save to completed
+    const record = {
+      id:'insp-'+Date.now(),
+      date:currentInspection.date,
+      inspector:currentInspector?currentInspector.name:'',
+      vehicle:{...v},
+      sentTo:[toEmail,inspEmail].filter(Boolean),
+      completion:Math.round(TEMPLATE.flatMap(s=>s.fields).filter(f=>f.required&&getStatus(f)).length/
+        TEMPLATE.flatMap(s=>s.fields).filter(f=>f.required).length*100)+'%'
+    };
+    completedInspections.push(record);
+    localStorage.setItem('rv_completed',JSON.stringify(completedInspections));
+
+    // Show success screen
+    document.getElementById('sent-details').textContent=`Report emailed to ${toEmail}${inspEmail&&inspEmail!==toEmail?' and '+inspEmail:''}.`;
+    document.getElementById('sent-summary').innerHTML=`
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">${v.year} ${v.make} ${v.model}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px">VIN: ${v.vin}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Inspector: ${currentInspector?currentInspector.name:'—'}</div>
+      <div style="font-size:12px;color:var(--text2)">Date: ${currentInspection.date}</div>`;
+
+    // Step indicators
+    ['sr3','sr4'].forEach(id=>{const el=document.getElementById(id);if(el){el.className='step-circle done';el.innerHTML='<i class="ti ti-check"></i>';}});
+
+    showScreen('sent');
+    showToast('Report sent successfully!');
+
+  }catch(e){
+    btn.disabled=false;
+    btn.innerHTML='<i class="ti ti-send"></i> Approve & send report ↗';
+    showToast('Send failed — check Settings tab');
+    console.error(e);
+  }
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────────────────────
+function saveSettings(){
+  CFG.pubkey=document.getElementById('s-pubkey').value||CFG.pubkey;
+  CFG.service=document.getElementById('s-service').value||CFG.service;
+  CFG.template=document.getElementById('s-template').value||CFG.template;
+  CFG.toEmail=document.getElementById('s-toemail').value||CFG.toEmail;
+  CFG.company=document.getElementById('s-company').value||CFG.company;
+  localStorage.setItem('rv_cfg',JSON.stringify(CFG));
+  showToast('Settings saved');
+}
+
+async function testEmail(){
+  const key=document.getElementById('s-pubkey').value||CFG.pubkey;
+  const svc=document.getElementById('s-service').value||CFG.service;
+  const tpl=document.getElementById('s-template').value||CFG.template;
+  const to=document.getElementById('s-toemail').value||CFG.toEmail;
+  const r=document.getElementById('settings-result');
+  r.style.display='block';r.style.background='#FAEEDA';r.style.color='#633806';
+  r.innerHTML='<i class="ti ti-loader"></i> Sending test...';
+  try{
+    emailjs.init(key);
+    await emailjs.send(svc,tpl,{to_email:to,subject:'RV Inspection — Test Email',message:'<p>This is a test from your RV Inspector Pro tool. Everything is working correctly.</p>'});
+    r.style.background='#EAF3DE';r.style.color='#27500A';
+    r.innerHTML='<i class="ti ti-circle-check"></i> Test sent to '+to+'! Check your inbox.';
+  }catch(e){
+    r.style.background='#FCEBEB';r.style.color='#A32D2D';
+    r.innerHTML='<i class="ti ti-x"></i> Failed: '+JSON.stringify(e)+'. Check your credentials.';
+  }
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showTab(tab){
+  const screenMap = {dashboard:'dashboard',inspection:'inspection',review:'review',settings:'settings'};
+  const screen = screenMap[tab];
+  if(screen) showScreen(screen);
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const navBtn = document.getElementById('nav-'+tab);
+  if(navBtn) navBtn.classList.add('active');
+  if(tab==='dashboard') renderDashboard();
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+(function init(){
+  const saved=localStorage.getItem('rv_cfg');
+  if(saved){Object.assign(CFG,JSON.parse(saved));}
+  document.getElementById('s-pubkey').value=CFG.pubkey;
+  document.getElementById('s-service').value=CFG.service;
+  document.getElementById('s-template').value=CFG.template;
+  document.getElementById('s-toemail').value=CFG.toEmail;
+  document.getElementById('s-company').value=CFG.company;
+  emailjs.init(CFG.pubkey);
+  renderInspectorList();
+})();
+</script>
+</body>
+</html>
